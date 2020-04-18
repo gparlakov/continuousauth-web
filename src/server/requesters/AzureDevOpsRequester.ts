@@ -4,6 +4,7 @@ import * as Joi from 'joi';
 import * as yauzl from 'yauzl';
 import { AzureDevOpsRequesterConfig, OTPRequest, Project } from '../db/models';
 import { RequestInformation } from '../responders/Responder';
+import { azureDevOpsReleaseSlug } from '../../common/slugs';
 import { AllowedState, Requester } from './Requester';
 
 export interface AzureDevOpsRequestMetadata {
@@ -66,8 +67,7 @@ const validateMetadataObject = (object: any) => {
 
 export class AzureDevOpsRequester
   implements Requester<AzureDevOpsRequesterConfig, AzureDevOpsRequestMetadata> {
-  slug: string = 'azuredevops-release';
-
+  slug: string = azureDevOpsReleaseSlug;
   constructor(
     /** exposed for testing purposes - uses the local axios config fn in production and can be chaged for tests */
     private getAxiosForConfig: GetAxiosForConfigFn = getAxiosForConfig,

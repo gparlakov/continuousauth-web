@@ -5,6 +5,7 @@ export const mockProject = (): FullProject => ({
   enabled: true,
   requester_circleCI: null,
   requester_travisCI: null,
+  requester_AzureDevOps: null,
   responder_slack: null,
   id: '123',
   repoName: 'my-repo',

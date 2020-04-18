@@ -8,6 +8,8 @@ import { CircleCILogo } from './icons/CircleCI';
 import { CircleCIRequesterConfig } from './configurators/CircleCIRequesterConfig';
 import { TravisCILogo } from './icons/TravisCI';
 import { TravisCIRequesterConfig } from './configurators/TravisCIRequesterConfig';
+import { AzureDevOpsLogo } from './icons/AzureDevOps';
+import { AzureDevOpsReleaseRequesterConfig } from './configurators/AzureDevOpsReleaseRequesterConfig';
 
 export interface Props {
   project: FullProject;
@@ -18,11 +20,13 @@ enum RequesterTab {
   NOTHING_YET,
   CIRCLE_CI,
   TRAVIS_CI,
+  AZURE_DEV_OPS_RELEASE
 }
 
 const defaultTabForProject = (project: FullProject) => {
   if (project.requester_circleCI) return RequesterTab.CIRCLE_CI;
   if (project.requester_travisCI) return RequesterTab.TRAVIS_CI;
+  if (project.requester_AzureDevOps) return RequesterTab.AZURE_DEV_OPS_RELEASE;
   return RequesterTab.NOTHING_YET;
 };
 
@@ -73,6 +77,13 @@ export function RequesterConfig({ project, setProject }: Props) {
           >
             <TravisCILogo className={styles.tabIcon} /> Travis CI
           </Tab>
+          <Tab
+            onSelect={() => setActiveTab(RequesterTab.AZURE_DEV_OPS_RELEASE)}
+            isSelected={activeTab === RequesterTab.AZURE_DEV_OPS_RELEASE}
+            style={{ paddingLeft: 28, position: 'relative' }}
+          >
+            <AzureDevOpsLogo className={styles.tabIcon} /> Azure Dev Ops (Release)
+          </Tab>
           <Tab disabled>More Coming Soon...</Tab>
         </Tablist>
       </Pane>
@@ -83,6 +94,8 @@ export function RequesterConfig({ project, setProject }: Props) {
           <CircleCIRequesterConfig project={project} setProject={setProject} />
         ) : activeTab === RequesterTab.TRAVIS_CI ? (
           <TravisCIRequesterConfig project={project} setProject={setProject} />
+        ) : activeTab === RequesterTab.AZURE_DEV_OPS_RELEASE ? (
+          <AzureDevOpsReleaseRequesterConfig project={project} setProject={setProject} />
         ) : null}
       </Pane>
     </Pane>
