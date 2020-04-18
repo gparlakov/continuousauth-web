@@ -14,6 +14,7 @@ export interface SimpleRepo {
 export interface SimpleProject extends SimpleRepo {
   requester_circleCI: boolean;
   requester_travisCI: boolean;
+  requester_AzureDevOps: boolean;
   responder_slack: {
     team: string;
     channel: string;
@@ -35,6 +36,11 @@ export interface FullProject extends SimpleRepo {
     teamIcon: string;
     usernameToMention: string;
   } | null;
+  requester_AzureDevOps: {
+    accessToken: string;
+    organizationName: string;
+    projectName: string;
+  } | null;
 }
 
 export interface ReposResponse {
@@ -54,7 +60,7 @@ export const projectIsMissingConfig = (
     >
   >,
 ) => {
-  const hasRequester: boolean = !!project.requester_circleCI || !!project.requester_travisCI;
+  const hasRequester: boolean = !!project.requester_circleCI || !!project.requester_travisCI || !!project.requester_AzureDevOps;
   const hasResponder: boolean = !!project.responder_slack;
   return !hasRequester || !hasResponder;
 };

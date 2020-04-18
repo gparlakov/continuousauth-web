@@ -62,11 +62,12 @@ export function repoRoutes() {
         repoOwner: p.repoOwner,
         requester_circleCI: !!p.requester_circleCI,
         requester_travisCI: !!p.requester_travisCI,
+        requester_AzureDevOps: !!p.requester_AzureDevOps,
         responder_slack: p.responder_slack
           ? {
-              team: p.responder_slack.teamName,
-              channel: p.responder_slack.channelName,
-            }
+            team: p.responder_slack.teamName,
+            channel: p.responder_slack.channelName,
+          }
           : null,
       }));
       res.json({
