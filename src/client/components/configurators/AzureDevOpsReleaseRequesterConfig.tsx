@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Heading, Paragraph, Pane, TextInput, Button, Label } from 'evergreen-ui';
+import { Heading, Paragraph, Pane, TextInput, Button, Label, toaster } from 'evergreen-ui';
 
 import { FullProject } from '../../../common/types';
 import { useAsyncTaskFetch } from 'react-hooks-async';
@@ -12,12 +12,15 @@ export interface Props {
 }
 
 export function AzureDevOpsReleaseRequesterConfig(props: Props) {
-  const azdo = props.project.requester_AzureDevOps;
+  const slug = azureDevOpsReleaseSlug;
+  const requesterName = 'Azure Dev Ops (Release)';
+
+  const { project, setProject } = props;
+  const azdo = project.requester_AzureDevOps;
   const originalAccessToken = azdo ? azdo.accessToken : '';
   const originalOrganizationName = azdo ? azdo.organizationName : '';
   const originalProjectName = azdo ? azdo.projectName : '';
-  const { project } = props;
-  const slug = azureDevOpsReleaseSlug;
+
   const [accessToken, setAccesToken] = React.useState(originalAccessToken);
   const [organizationName, setOrganizationName] = React.useState(originalOrganizationName);
   const [projectName, setProjectName] = React.useState(originalProjectName);
@@ -28,9 +31,9 @@ export function AzureDevOpsReleaseRequesterConfig(props: Props) {
       headers: new Headers({
         'Content-Type': 'application/json',
       }),
-      body: JSON.stringify({ accessToken }),
+      body: JSON.stringify({ accessToken, projectName, organizationName }),
     }),
-    [project, accessToken],
+    [project, accessToken, projectName, organizationName],
   );
 
   const createRequesterTask = useAsyncTaskFetch<FullProject>(
@@ -39,20 +42,53 @@ export function AzureDevOpsReleaseRequesterConfig(props: Props) {
     defaultBodyReader,
   );
 
-  const hasChanged = () => (accessToken !== originalAccessToken && accessToken) ||
+  React.useEffect(() => {
+    if (createRequesterTask.error) {
+      const { responseBody } = createRequesterTask.error as any;
+      let errorInfo =
+        'Please ensure the access token is correct for this project and organiztion and try again.';
+      if (
+        responseBody != null &&
+        responseBody.error != null &&
+        typeof responseBody.error === 'string' &&
+        responseBody.error.length > 0
+      ) {
+        errorInfo = responseBody.error;
+      }
+      toaster.danger(`Failed to create the ${requesterName} Requester. ${errorInfo}`);
+    }
+  }, [createRequesterTask.error]);
+
+  React.useEffect(() => {
+    if (createRequesterTask.result) {
+      toaster.success(
+        `Successfully created the ${requesterName} Requester. The access token/project/organizationName combination is valid.`,
+      );
+      setProject(createRequesterTask.result);
+    }
+  }, [createRequesterTask.result]);
+
+  const hasChanged = () =>
+    (accessToken !== originalAccessToken && accessToken) ||
     (organizationName !== originalOrganizationName && organizationName) ||
     (projectName !== originalProjectName && projectName);
 
   const saving = createRequesterTask.started && createRequesterTask.pending;
   return (
-
     <Pane>
       <Pane>
         <Heading size={400} marginBottom={8}>
-          Azure Dev Ops (Release)
-      </Heading>
+          {requesterName}
+        </Heading>
         <Paragraph marginBottom={4}>
-          See example in <a href="https://github.com/continuousauth/web/blob/master/docs/azdo-props.png" target="_blank" rel="noreferrer noopener">docs</a>
+          See example in{' '}
+          <a
+            href="https://github.com/continuousauth/web/blob/master/docs/azdo-props.png"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            docs
+          </a>
         </Paragraph>
         <Paragraph marginBottom={4}>
           <Label> Organization Name</Label>

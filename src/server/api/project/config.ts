@@ -11,8 +11,10 @@ import {
   withTransaction,
   CircleCIRequesterConfig,
   TravisCIRequesterConfig,
+  AzureDevOpsRequesterConfig,
 } from '../../db/models';
 import { getProjectFromIdAndCheckPermissions } from './_safe';
+import { azureDevOpsReleaseSlug } from '../../../common/slugs';
 
 const d = debug('cfa:server:api:project:config');
 const a = createA(d);
@@ -69,6 +71,85 @@ export function configRoutes() {
           );
           await project.resetAllRequesters(t);
           project.requester_circleCI_id = config.id;
+          await project.save({ transaction: t });
+          return await Project.findByPk(project.id, {
+            include: Project.allIncludes,
+            transaction: t,
+          });
+        });
+
+        res.json(newProject);
+      },
+    ),
+  );
+
+  router.post(
+    `/:id/config/requesters/${azureDevOpsReleaseSlug}`,
+    validate(
+      {
+        a,
+        params: {
+          id: Joi.number()
+            .integer()
+            .required(),
+        },
+        body: {
+          organizationName: Joi.string()
+            .min(1)
+            .required(),
+          projectName: Joi.string()
+            .min(1)
+            .required(),
+          accessToken: Joi.string()
+            .min(1)
+            .required(),
+        },
+      },
+      async (req, res) => {
+        const project = await getProjectFromIdAndCheckPermissions(req.params.id, req, res);
+        if (!project) return;
+        const { organizationName, projectName, accessToken } = req.body;
+
+        const response = await axios.get<{
+          count: number;
+          value: Array<{ name: string; [id: string]: any }>;
+        }>(`https://dev.azure.com/${organizationName}/_apis/projects/`, {
+          headers: {
+            Authorization: `Basic ${Buffer.from(`PAT:${accessToken}`).toString('base64')}`,
+            'X-TFS-FedAuthRedirect': 'Suppress',
+          },
+          validateStatus: () => true,
+        });
+
+        if (response.status !== 200) {
+          return res.status(401).json({
+            error:
+              'That token is not valid for the current project, or the project is not available',
+          });
+        }
+
+        const projectNameNormalized = projectName.toLowerCase();
+
+        if (!response.data.value.some(p => p.name.toLowerCase() === projectNameNormalized)) {
+          // user has supplied a valid access token and a valid org name so is probaly not a bad actor, deserves a good error
+          return res.status(401).json({
+            error: `Seems that a project with name "${projectName}" does not exist in the organization "${organizationName}"`,
+          });
+        }
+
+        const newProject = await withTransaction(async t => {
+          const config = await AzureDevOpsRequesterConfig.create(
+            {
+              accessToken: req.body.accessToken,
+              organizationName,
+              projectName,
+            },
+            {
+              returning: true,
+            },
+          );
+          await project.resetAllRequesters(t);
+          project.requester_AzureDevOps_id = config.id;
           await project.save({ transaction: t });
           return await Project.findByPk(project.id, {
             include: Project.allIncludes,
