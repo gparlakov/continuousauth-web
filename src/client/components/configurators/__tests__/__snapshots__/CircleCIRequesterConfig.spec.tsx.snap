@@ -9,6 +9,7 @@ exports[`<CircleCIRequesterConfig /> Should render a GenericAccessTokenRequester
       "id": "123",
       "repoName": "my-repo",
       "repoOwner": "my-owner",
+      "requester_AzureDevOps": null,
       "requester_circleCI": null,
       "requester_travisCI": null,
       "responder_slack": null,
