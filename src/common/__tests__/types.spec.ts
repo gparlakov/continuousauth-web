@@ -7,6 +7,7 @@ describe('projectIsMissingConfig', () => {
         responder_slack: {},
         requester_circleCI: {},
         requester_travisCI: {},
+        requester_AzureDevOps: {},
       }),
     ).toBe(false);
   });
@@ -17,6 +18,7 @@ describe('projectIsMissingConfig', () => {
         responder_slack: {},
         requester_circleCI: null,
         requester_travisCI: null,
+        requester_AzureDevOps: null
       }),
     ).toBe(true);
   });
@@ -27,6 +29,7 @@ describe('projectIsMissingConfig', () => {
         responder_slack: null,
         requester_circleCI: {},
         requester_travisCI: {},
+        requester_AzureDevOps: {}
       }),
     ).toBe(true);
   });
@@ -37,6 +40,7 @@ describe('projectIsMissingConfig', () => {
         responder_slack: null,
         requester_circleCI: null,
         requester_travisCI: null,
+        requester_AzureDevOps: null
       }),
     ).toBe(true);
   });
